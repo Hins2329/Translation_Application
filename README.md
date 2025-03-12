@@ -40,7 +40,8 @@ PyTorch with CUDA was used to accelerate training.
 Configuration of Kafka+Debezium(Syncing DB from MySQL to MongoDB) and docker containers.
   * docker_compose.yml
   * DebeziumConfig
-* Transformer_service 
+* Transformer_service  
+  model.model hasn't benn uploaded due to some reasons.
 
 [Login](login.pdf) 
 [Redirecting](Redirecting.pdf)
