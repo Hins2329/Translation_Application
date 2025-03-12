@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login & Register</title>
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 320px;
+        }
+        h2 {
+            color: white;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            color: #007bff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #007bff;
+            color: white;
+        }
+        #switch-text {
+            margin-top: 15px;
+            color: white;
+        }
+        #switch-text a {
+            color: yellow;
+            cursor: pointer;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+  <h2 id="form-title">Login</h2>
+  <form id="auth-form">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit" id="auth-btn">Login</button>
+  </form>
+  <p id="switch-text">Don't have an account? <a href="#" id="switch-btn">Register</a></p>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const formTitle = document.getElementById("form-title");
+        const authForm = document.getElementById("auth-form");
+        const authButton = document.getElementById("auth-btn");
+        const switchText = document.getElementById("switch-text");
+        let isLogin = true;
+
+        function toggleForm() {
+            isLogin = !isLogin;
+            formTitle.textContent = isLogin ? "Login" : "Register";
+            authButton.textContent = isLogin ? "Login" : "Register";
+            switchText.innerHTML = isLogin
+                ? `Don't have an account? <a href='#' id='switch-btn'>Register</a>`
+                : `Already have an account? <a href='#' id='switch-btn'>Login</a>`;
+            document.getElementById("switch-btn").addEventListener("click", (e) => {
+                e.preventDefault();
+                toggleForm();
+            });
+        }
+
+        document.getElementById("switch-btn").addEventListener("click", (e) => {
+            e.preventDefault();
+            toggleForm();
+        });
+
+        authForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            if (!username || !password) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            const endpoint = isLogin
+                ? "http://localhost:8800/users/login"
+                : "http://localhost:8800/users/register";
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                    credentials: "include", // ✅ Include cookies in cross-origin requests
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Something went wrong");
+                }
+
+                if (isLogin) {
+                    alert("Login successful! Redirecting...");
+
+                    // ✅ Redirect to translation service after login
+                    window.location.replace("http://localhost:8444/translate.html");
+                } else {
+                    alert("Registration successful! You can now log in.");
+                    toggleForm();
+                }
+            } catch (error) {
+                console.error("Error:", error.message);
+                alert(error.message);
+            }
+        });
+
+        // ✅ Try to auto-login if token is stored in cookies
+        async function autoLogin() {
+            try {
+                const response = await fetch("http://localhost:8800/users/verify-token", {
+                    method: "GET",
+                    credentials: "include", // ✅ Include cookies for cross-domain
+                });
+
+                if (response.ok) {
+                    console.log("Token is valid. Redirecting...");
+                    window.location.replace("http://localhost:8444/translate.html");
+                }
+            } catch (error) {
+                console.error("Auto-login failed:", error.message);
+            }
+        }
+
+        autoLogin(); // ✅ Attempt auto-login on page load
+    });
+</script>
+
+<!--<script>-->
+<!--        document.addEventListener("DOMContentLoaded", () => {-->
+<!--            const formTitle = document.getElementById("form-title");-->
+<!--            const authForm = document.getElementById("auth-form");-->
+<!--            const authButton = document.getElementById("auth-btn");-->
+<!--            const switchText = document.getElementById("switch-text");-->
+<!--            let isLogin = true;-->
+
+<!--            function toggleForm() {-->
+<!--                isLogin = !isLogin;-->
+<!--                formTitle.textContent = isLogin ? "Login" : "Register";-->
+<!--                authButton.textContent = isLogin ? "Login" : "Register";-->
+<!--                switchText.innerHTML = isLogin-->
+<!--                    ? "Don't have an account? <a href='#' id='switch-btn'>Register</a>"-->
+<!--                    : "Already have an account? <a href='#' id='switch-btn'>Login</a>";-->
+<!--                document.getElementById("switch-btn").addEventListener("click", (e) => {-->
+<!--                    e.preventDefault();-->
+<!--                    toggleForm();-->
+<!--                });-->
+<!--            }-->
+
+<!--            document.getElementById("switch-btn").addEventListener("click", (e) => {-->
+<!--                e.preventDefault();-->
+<!--                toggleForm();-->
+<!--            });-->
+
+<!--            authForm.addEventListener("submit", async (e) => {-->
+<!--                e.preventDefault();-->
+<!--                const username = document.getElementById("username").value.trim();-->
+<!--                const password = document.getElementById("password").value.trim();-->
+<!--                if (!username || !password) {-->
+<!--                    alert("Please fill in all fields.");-->
+<!--                    return;-->
+<!--                }-->
+<!--                const endpoint = isLogin ? "http://localhost:8800/users/login" : "http://localhost:8800/users/register";-->
+<!--                try {-->
+<!--                    const response = await fetch(endpoint, {-->
+<!--                        method: "POST",-->
+<!--                        headers: { "Content-Type": "application/json" },-->
+<!--                        body: JSON.stringify({ username, password })-->
+<!--                    });-->
+
+<!--                    let data;-->
+<!--                    try {-->
+<!--                        data = await response.json(); // Prevent crashing if response isn't JSON-->
+<!--                    } catch {-->
+<!--                        data = { message: "Unexpected response from server." };-->
+<!--                    }-->
+
+<!--                    if (!response.ok) {-->
+<!--                        throw new Error(data.message || "Something went wrong");-->
+<!--                    }-->
+
+<!--                    if (isLogin) {-->
+<!--                        if (!data.token) {-->
+<!--                          throw new Error("Token missing from response.");-->
+<!--                        }-->
+
+<!--                        function getCookie(name) {-->
+<!--                        const cookies = document.cookie.split("; ");-->
+<!--                            for (let cookie of cookies) {-->
+<!--                                const [key, value] = cookie.split("=");-->
+<!--                                if (key === name) return value;-->
+<!--                            }-->
+<!--                              return null;-->
+<!--                        }-->
+
+<!--                        const token = getCookie("token");-->
+<!--                        if (!token) {-->
+<!--                            alert("You must log in first!");-->
+<!--                            window.location.href = "http://localhost:8800/loginAndRegister.html";-->
+<!--                        }-->
+
+<!--                        alert("Login successful! Redirecting...");-->
+<!--                        window.location.replace("http://localhost:8444/translate.html");-->
+<!--                    } else {-->
+<!--                        alert("Registration successful! You can now log in.");-->
+<!--                        toggleForm();-->
+<!--                    }-->
+<!--                } catch (error) {-->
+<!--                    alert(error.message);-->
+<!--                }-->
+<!--            });-->
+<!--        });-->
+<!--    </script>-->
+</body>
+</html>

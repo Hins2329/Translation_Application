@@ -1,0 +1,39 @@
+server:
+  port: 8444
+
+spring:
+  application:
+    name: translation-service
+  data:
+    mongodb:
+      host: localhost  # Change from 'localhost' if using Docker
+      port: 27017
+      database: my_mongo_db
+      authentication-database: admin
+      username: root
+      password: root
+#        uri: mongodb://host.docker.internal:27017
+#    data:
+#      mongodb:
+#        uri: mongodb://superadmin:superadminpassword@localhost:27017/my_mongo_db?authSource=admin&authMechanism=SCRAM-SHA-256
+#  mongosh "mongodb://superadmin:superadminpassword@localhost:27017/my_mongo_db?authSource=admin&authMechanism=SCRAM-SHA-256"
+#      data:
+#    mongodb:
+#      uri: mongodb://root:root@localhost:27017/my_mongo_db?authSource=admin
+#      host: 4e92bb1ea763  # Use the Docker container name
+#      port: 27017
+#      database: my_mongo_db  # Change this to your actual DB name
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8500/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    hostname: localhost
+
+logging:
+  level:
+    org.springframework.data.mongodb: DEBUG

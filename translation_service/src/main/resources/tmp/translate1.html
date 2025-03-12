@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Translate</title>
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 400px;
+        }
+        h2 {
+            color: white;
+        }
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            color: #ff5e62;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #ff5e62;
+            color: white;
+        }
+        #logout {
+            margin-top: 15px;
+            background: black;
+            color: white;
+        }
+        #translated-text {
+            margin-top: 15px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+  <h2>Translate Your Text</h2>
+  <textarea id="sentence" placeholder="Enter a sentence to translate..." rows="4"></textarea>
+  <button id="translate-btn">Translate</button>
+  <p id="translated-text"></p>
+  <button id="logout">Logout</button>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const translateBtn = document.getElementById("translate-btn");
+        const sentenceInput = document.getElementById("sentence");
+        const translatedText = document.getElementById("translated-text");
+        const logoutBtn = document.getElementById("logout");
+
+        // Check if user is authenticated
+<!--        const token = localStorage.getItem("token");-->
+<!--        if (!token) {-->
+<!--            alert("You must log in first!");-->
+<!--            window.location.href = "/index.html";-->
+<!--            return;-->
+<!--        }-->
+
+        // Translation Request
+        translateBtn.addEventListener("click", async () => {
+            const sentence = sentenceInput.value.trim();
+            if (!sentence) {
+                alert("Please enter a sentence.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:8444/translate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+<!--                        "Authorization": "Bearer " + token-->
+                    },
+<!--                    body: JSON.stringify({ sentence })-->
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || "Translation failed.");
+                }
+
+                translatedText.textContent = "Translated: " + data.translation;
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("token");
+            window.location.href = "/index.html";
+        });
+    });
+</script>
+</body>
+</html>

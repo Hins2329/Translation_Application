@@ -1,0 +1,78 @@
+services:
+  zookeeper:
+    image: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - kafka-network
+
+  kafka:
+    image: bitnami/kafka:latest
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka-network
+
+  debezium:
+    image: debezium/connect:2.7.3.Final
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: my_connect_configs
+      OFFSET_STORAGE_TOPIC: my_connect_offsets
+      STATUS_STORAGE_TOPIC: my_connect_status
+    ports:
+      - "8083:8083"
+    depends_on:
+      - kafka
+    networks:
+      - kafka-network
+    volumes:
+      - /Users/junxuanzhang/Desktop/alwaysGoodLuck/sycnDBs/connector/mongodb-kafka-connect-mongodb-1.15.0/lib:/kafka/connect/mongodb-kafka-connect
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: my_database
+      MYSQL_USER: debezium_user
+      MYSQL_PASSWORD: 1234
+      MYSQL_ROOT_HOST: '%'
+      command: --server-id=223344 --log-bin=mysql-bin --binlog-format=ROW --binlog-do-db=my_database
+    ports:
+      - "3306:3306"
+    networks:
+      - kafka-network
+
+  mongo:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - /Users/junxuanzhang/Documents/MongoDBVolume/mongo_data:/data/db
+    networks:
+      - kafka-network
+
+#  mongo-express:
+#    image: mongo-express
+#    container_name: mongo-express
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      ME_CONFIG_MONGODB_SERVER: mongo
+
+networks:
+  kafka-network:
+    driver: bridge

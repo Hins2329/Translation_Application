@@ -1,0 +1,28 @@
+server:
+  port: 8800
+
+spring:
+  application:
+    name: login-and-register-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/my_database
+    #    ?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#  security:
+#    user:
+#      name: admin
+#      password: admin
+#    autoconfigure:
+#      exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8500/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+  instance:
+    prefer-ip-address: true

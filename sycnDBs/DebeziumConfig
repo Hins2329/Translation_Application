@@ -1,0 +1,35 @@
+//Configure the Connector with a POST request to the
+//       Debezium Kafka Connect service (http://localhost:8083/connectors)
+
+// mysql config /usr/local/etc/my.cnf
+
+curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d
+    '{"name":"mysql-connector",
+        "config":
+            {"connector.class":"io.debezium.connector.mysql.MySqlConnector",
+            "tasks.max":"1",
+            "database.hostname":"mysql",
+            "database.port":"3306",
+            "database.user":"debezium_user",
+            "database.password":"1234",
+            "database.server.id":"223344",
+            "database.server.name":"mysql_server",
+            "database.include.list":"my_database",
+            "table.include.list":"my_database.users",
+            "schema.history.internal.kafka.bootstrap.servers":"kafka:9092",
+            "schema.history.internal.kafka.topic":"dbhistory",
+            "topic.prefix":"Sync"
+            }
+    }'
+
+
+//check for status
+curl -X GET http://localhost:8083/connectors/mysql-connector/status
+
+//create a consumer and find the proper topic
+kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic Sync.users --from-beginning
+
+
+
+
+//Config for MongoDB Sink

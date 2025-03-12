@@ -1,0 +1,24 @@
+server:
+  port: 8500
+spring:
+  application:
+    name: eureka-server1
+  security:
+    basic:
+      enabled: true
+      user:
+        name: root
+        password: 123456
+eureka:
+  client:
+    register with eureka: true
+    fetch registry: true
+    service-url:
+      defaultZone: http://localhost:8500/eureka/
+#      defaultZone: http://localhost:8500/eureka/, http://localhost:8501/eureka/, http://localhost:8502/eureka/
+  instance:
+    hostname: localhost
+  server:
+    enable-self-preservation: false
+
+

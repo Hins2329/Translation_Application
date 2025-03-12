@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="mongo-kafka-connect-1.15.0-confluent">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/connector/mongodb-kafka-connect-mongodb-1.15.0/lib/mongo-kafka-connect-1.15.0-confluent.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

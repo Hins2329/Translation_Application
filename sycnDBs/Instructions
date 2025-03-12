@@ -1,0 +1,79 @@
+1. Docker set up
+        docker-compose.yml
+            Zookeeper (zookeeper image): For Kafka coordination.
+            Kafka (bitnami/kafka:latest): Messaging backbone.
+            MySQL (mysql:8.0): Source database with binlog enabled.
+            Debezium (debezium/connect:2.7.3.Final): CDC tool to capture MySQL changes.
+2. Debezium MySQL Connector:
+     curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d
+     '{"name":"mysql-connector",
+     "config":
+     {"connector.class":"io.debezium.connector.mysql.MySqlConnector",
+     "tasks.max":"1",
+     "database.hostname":"mysql",
+     "database.port":"3306",
+     "database.user":"debezium_user",
+     "database.password":"1234",
+     "database.server.id":"223344",
+     "database.server.name":"mysql_server",
+     "database.include.list":"my_database",
+     "table.include.list":"my_database.users",
+     "schema.history.internal.kafka.bootstrap.servers":"kafka:9092",
+     "schema.history.internal.kafka.topic":"dbhistory",
+     "topic.prefix":"Sync"}}'
+3. mysql set user privileges
+        mysql> GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'debezium_user'@'%';
+        FLUSH PRIVILEGES;
+   enable bin-log
+        //on the compose.yml
+        command: --server-id=223344 --log-bin=mysql-bin --binlog-format=ROW --binlog-do-db=my_database
+4. kafka consume
+        listens to particular table
+    Kafka itself doesn’t create these topics,
+    but Debezium (via Kafka Connect) automatically generates topic names based on
+    the database and table structure in your connector config.
+    It concatenates the fields
+    (topic.prefix, database.server.name, database, table)
+    into a single topic name string.
+
+    //check the topic
+    kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic Sync.my_database.users --from-beginning
+
+5. MongoDB
+curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
+  "name": "mongo-sink-connector",
+  "config": {
+    "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
+    "tasks.max": "1",
+    "topics": "Sync.my_database.users",
+    "connection.uri": "mongodb://root:root@mongo:27017/my_mongo_db?authSource=admin",
+    "database": "my_mongo_db",
+    "collection": "users",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "true",
+    "transforms.unwrap.delete.handling.mode": "drop"
+  }
+}'
+
+//status checking
+curl -X GET http://localhost:8083/connectors/mongo-sink-connector/status
+//delete
+curl -X DELETE http://localhost:8083/connectors/mongo-sink-connector
+
+    a. downlaod mongoDB and put the address to compose.yml
+    b. use the restapi above to add connector. JUST LIKE THE MYSQL CONNECT
+    c. use the password to get in
+        docker exec -it mongo mongosh -u root -p root --authenticationDatabase admin
+
+    //when get to the database/collection(users)
+    use db.users.find({}, { "payload.after.username": 1, "payload.after.role": 1 })
+    then will find all the data in MYSQL db show up in MONGODB
+
+    { "payload.after.username": 1, "payload.after.role": 1 }:
+    	•	This is the projection, specifying which fields to include in the result.
+    	•	{ "payload.after.username": 1, "payload.after.role": 1 } means that you’re asking MongoDB to include only the username and role fields that are inside the after object, which itself is inside the payload object.
+    	•	The 1 means “include this field,” while the absence of 1 (such as for fields you don’t want) would be treated as “exclude.”

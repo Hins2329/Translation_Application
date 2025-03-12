@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 400px;
+        }
+        h2 {
+            color: white;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            color: #ff5e62;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #ff5e62;
+            color: white;
+        }
+        #logout {
+            margin-top: 15px;
+            background: black;
+            color: white;
+        }
+        #translated-text {
+            margin-top: 15px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Translate Your Text</h2>
+    <p style="font-size: 14px; color: white;">Let's see what this German sentence says, shall we?</p>
+    <textarea id="sentence" rows="4">
+Aufgrund von Misswirtschaft sind das trainierte Modell und die Datensätze verloren gegangen. Dies ist der einzige Satz,den ich im Moment schreiben kann; mehr wird noch kommen.</textarea>
+    <button id="translate-btn">Translate</button>
+    <p id="translated-text"></p>
+
+    <h2>Help Improve My Model 💕</h2>
+    <textarea id="user-phrase" placeholder="Due to mismanagement, the trained model and datasets have been lost. This is the only sentence that the model can do. Please leave your favorite quote/phrase to help me improve my model. 💕" rows="3"></textarea>
+    <button id="submit-phrase-btn">Submit</button>
+
+    <button id="logout">Logout</button>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const translateBtn = document.getElementById("translate-btn");
+        const sentenceInput = document.getElementById("sentence");
+        const translatedText = document.getElementById("translated-text");
+        const logoutBtn = document.getElementById("logout");
+        const submitPhraseBtn = document.getElementById("submit-phrase-btn");
+        const userPhraseInput = document.getElementById("user-phrase");
+
+        // ✅ Function to verify token using cookies
+        async function verifyToken() {
+            try {
+                const response = await fetch("http://localhost:8444/verify-token", {
+                    method: "GET",
+                    credentials: "include", // ✅ Send cookies with request
+                });
+
+                if (!response.ok) {
+                    throw new Error("Invalid or expired session. Please log in again.");
+                }
+                console.log("✅ Token verified successfully");
+            } catch (error) {
+                console.error("❌ Token verification failed:", error.message);
+                alert(error.message);
+                window.location.href = "http://localhost:8800/loginAndRegister.html"; // ✅ Redirect to login
+            }
+        }
+
+        // ✅ Verify token on page load
+        verifyToken();
+
+        // ✅ Translation API Call
+        translateBtn.addEventListener("click", async () => {
+            const sentence = sentenceInput.value.trim();
+            if (!sentence) {
+                alert("Please enter a sentence.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:8444/translate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include", // ✅ Use cookies to send token
+                    body: JSON.stringify({ sentence })
+                });
+
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+
+                const data = await response.text();
+                translatedText.textContent = "Translated: " + data;
+            } catch (error) {
+                console.error("❌ Translation failed:", error.message);
+                alert("Translation failed: " + error.message);
+            }
+        });
+
+        // ✅ Submit Phrase API Call
+        submitPhraseBtn.addEventListener("click", async () => {
+            const userPhrase = userPhraseInput.value.trim();
+            if (!userPhrase) {
+                alert("Please enter a phrase.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:8444/users/sentences", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include", // ✅ Use cookies to send token
+                    body: JSON.stringify({ sentence: userPhrase })
+                });
+
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+
+                alert("✅ Your phrase has been saved! Thank you 💖");
+                userPhraseInput.value = ""; // ✅ Clear input after submission
+            } catch (error) {
+                console.error("❌ Failed to save phrase:", error.message);
+                alert("Failed to save phrase: " + error.message);
+            }
+        });
+
+        // ✅ Logout
+        logoutBtn.addEventListener("click", () => {
+            document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = "/index.html"; // ✅ Redirect to home
+        });
+    });
+</script>
+
+</body>
+</html>
