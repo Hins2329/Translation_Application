@@ -41,7 +41,6 @@ Configuration of Kafka+Debezium(Syncing DB from MySQL to MongoDB) and docker con
   * docker_compose.yml
   * DebeziumConfig
 * Transformer_service  
-  model.model hasn't benn uploaded due to some reasons.
 
 [Login](login.pdf) 
 [Redirecting](Redirecting.pdf)
